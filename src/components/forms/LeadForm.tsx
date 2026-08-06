@@ -8,6 +8,9 @@ import { Textarea } from "@/components/ui/Textarea";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Button } from "@/components/ui/Button";
 import { trackEvent } from "@/lib/analytics/track";
+import { leadSchema, MIN_FILL_TIME_MS } from "@/lib/validation/lead-schema";
+import { sendLeadToOwner, sendLeadClientConfirmation, LeadEmailError } from "@/lib/email/emailjs-client";
+import { publicEnv } from "@/lib/env";
 
 /** FRONTEND.md §3. */
 type LeadSubmissionState =
@@ -15,10 +18,6 @@ type LeadSubmissionState =
   | { status: "submitting" }
   | { status: "success"; redirectUrl: string }
   | { status: "error"; message: string };
-
-type LeadResponse =
-  | { ok: true; redirectUrl: string; requestId: string }
-  | { ok: false; code: "VALIDATION" | "RATE_LIMITED" | "EMAIL_FAILED" | "SERVER_ERROR"; message: string };
 
 const UTM_KEYS = ["source", "medium", "campaign"] as const;
 
@@ -34,7 +33,7 @@ function readUtm(): Record<string, string> | undefined {
 }
 
 /**
- * Conectado a POST /api/leads (Fase 05). Sin datos controlados por campo:
+ * Envía vía EmailJS desde el navegador (sin servidor, export estático). Sin datos controlados por campo:
  * se lee FormData en el submit, así el contenido se conserva tal cual si el
  * envío falla (COMPONENTE-BOTONES-FORMULARIOS.md §4 "no limpiar tras un fallo").
  */
@@ -57,9 +56,11 @@ export function LeadForm() {
 
     const form = event.currentTarget;
     const data = new FormData(form);
+    const firstName = String(data.get("nombre") ?? "").trim();
+    const lastName = String(data.get("apellido") ?? "").trim();
 
     const payload = {
-      fullName: String(data.get("nombre") ?? ""),
+      fullName: `${firstName} ${lastName}`.trim(),
       businessName: String(data.get("empresa") ?? ""),
       email: String(data.get("correo") ?? ""),
       phone: String(data.get("telefono") ?? ""),
@@ -74,45 +75,68 @@ export function LeadForm() {
       startedAt,
     };
 
+    // Honeypot: un campo que un humano nunca llena.
+    if (payload.website) {
+      setState({ status: "error", message: "Revisa los campos indicados." });
+      return;
+    }
+
+    // Tiempo mínimo de envío: descarta bots que completan y envían al instante.
+    if (Date.now() - payload.startedAt < MIN_FILL_TIME_MS) {
+      setState({ status: "error", message: "Revisa los campos indicados." });
+      return;
+    }
+
+    const parsed = leadSchema.safeParse(payload);
+    if (!parsed.success) {
+      setState({ status: "error", message: "Revisa los campos indicados." });
+      return;
+    }
+
+    const lead = {
+      fullName: parsed.data.fullName,
+      businessName: parsed.data.businessName,
+      email: parsed.data.email,
+      phone: parsed.data.phone,
+      country: parsed.data.country,
+      teamSize: parsed.data.teamSize,
+      portfolioRange: parsed.data.portfolioRange,
+      message: parsed.data.message,
+      processingConsent: parsed.data.processingConsent,
+      marketingConsent: parsed.data.marketingConsent,
+      utm: parsed.data.utm,
+    };
+
+    const context = {
+      requestId: crypto.randomUUID(),
+      submittedAt: new Date().toISOString(),
+      pageUrl: window.location.href,
+    };
+
     setState({ status: "submitting" });
     trackEvent("lead_form_submit");
 
-    let response: Response;
     try {
-      response = await fetch("/api/leads", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-    } catch {
+      // Al negocio: ruta crítica, "fail closed" — si falla, no se redirige.
+      await sendLeadToOwner(lead, context);
+    } catch (error) {
       trackEvent("lead_form_error");
-      setState({
-        status: "error",
-        message: "No pudimos enviar tu solicitud. Tus datos siguen aquí; inténtalo nuevamente.",
-      });
+      const message =
+        error instanceof LeadEmailError
+          ? "No pudimos enviar tu solicitud. Tus datos siguen aquí; inténtalo nuevamente."
+          : "Ocurrió un error inesperado. Inténtalo nuevamente.";
+      setState({ status: "error", message });
       return;
     }
 
-    let result: LeadResponse;
-    try {
-      result = await response.json();
-    } catch {
-      trackEvent("lead_form_error");
-      setState({ status: "error", message: "Ocurrió un error inesperado. Inténtalo nuevamente." });
-      return;
-    }
+    // Al cliente: best-effort, no bloquea el registro.
+    void sendLeadClientConfirmation(lead, context);
 
-    if (!result.ok) {
-      trackEvent("lead_form_error");
-      setState({ status: "error", message: result.message });
-      return;
-    }
-
+    const redirectUrl = publicEnv.NEXT_PUBLIC_SYSTEM_REGISTER_URL;
     trackEvent("lead_email_confirmed");
-    setState({ status: "success", redirectUrl: result.redirectUrl });
+    setState({ status: "success", redirectUrl });
     trackEvent("registration_redirect");
-    // Redirección solo tras confirmación del servidor (no en finally).
-    window.location.href = result.redirectUrl;
+    window.location.href = redirectUrl;
   }
 
   return (
@@ -126,8 +150,16 @@ export function LeadForm() {
       <Input
         id="nombre"
         name="nombre"
-        label="Nombre y apellido"
-        autoComplete="name"
+        label="Nombre"
+        autoComplete="given-name"
+        required
+        disabled={isSubmitting}
+      />
+      <Input
+        id="apellido"
+        name="apellido"
+        label="Apellido"
+        autoComplete="family-name"
         required
         disabled={isSubmitting}
       />

@@ -1,4 +1,5 @@
 import { HeroSection } from "@/components/sections/HeroSection";
+import { SystemScreenshotsSection } from "@/components/sections/SystemScreenshotsSection";
 import { ProblemSection } from "@/components/sections/ProblemSection";
 import { DashboardStorySection } from "@/components/sections/DashboardStorySection";
 import { OriginationSection } from "@/components/sections/OriginationSection";
@@ -17,6 +18,9 @@ export default function Home() {
   return (
     <main id="contenido">
       <HeroSection />
+      <SectionReveal sectionName="capturas_sistema">
+        <SystemScreenshotsSection />
+      </SectionReveal>
       <SectionReveal sectionName="problema">
         <ProblemSection />
       </SectionReveal>

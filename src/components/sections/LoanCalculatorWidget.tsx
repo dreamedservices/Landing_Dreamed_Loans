@@ -11,6 +11,7 @@ import { trackEvent } from "@/lib/analytics/track";
 import {
   calculateLoanProjection,
   formatCurrency,
+  formatCurrencyInput,
   parseLocaleNumber,
   type LoanPaymentSchedule,
 } from "@/lib/loan-calculations";
@@ -37,11 +38,20 @@ type CalculatorState =
  * Misma calculadora del dashboard, funcional aquí (no una captura de
  * pantalla): mismos campos, mismo cálculo (`lib/loan-calculations.ts`,
  * portado del sistema real), adaptada a los componentes de esta landing.
- * Sin datos controlados por campo (se lee FormData al enviar, igual que
- * LeadForm) — el único estado en React es el resultado a mostrar.
+ * Los campos siguen siendo no controlados: el capital se formatea directamente
+ * en el input y FormData conserva el valor visible al enviar.
  */
 export function LoanCalculatorWidget() {
   const [state, setState] = useState<CalculatorState>({ status: "idle" });
+
+  function handleCapitalInput(event: React.FormEvent<HTMLInputElement>) {
+    event.currentTarget.value = formatCurrencyInput(event.currentTarget.value);
+  }
+
+  function handleCapitalBlur(event: React.FocusEvent<HTMLInputElement>) {
+    if (!event.currentTarget.value) return;
+    event.currentTarget.value = formatCurrencyInput(event.currentTarget.value, true);
+  }
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -64,7 +74,17 @@ export function LoanCalculatorWidget() {
   return (
     <Card tone="light" className="grid gap-8 lg:grid-cols-2">
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-        <Input id="capital" name="capital" label="Capital solicitado" placeholder="5,000.00" required />
+        <Input
+          id="capital"
+          name="capital"
+          type="text"
+          inputMode="decimal"
+          label="Capital solicitado (RD$)"
+          placeholder="5,000.00"
+          onInput={handleCapitalInput}
+          onBlur={handleCapitalBlur}
+          required
+        />
 
         <div className="grid grid-cols-2 gap-4">
           <div className="relative">

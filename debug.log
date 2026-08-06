@@ -1,0 +1,11 @@
+[0806/114223.918:ERROR:gpu\command_buffer\service\gl_utils.cc:430] [.WebGL-0x32fc00ac7c00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels
+[0806/114224.113:ERROR:gpu\command_buffer\service\gl_utils.cc:430] [.WebGL-0x32fc00ac7c00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels
+[0806/114224.304:ERROR:gpu\command_buffer\service\gl_utils.cc:430] [.WebGL-0x32fc00ac7c00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels
+[0806/114224.367:ERROR:gpu\command_buffer\service\gl_utils.cc:430] [.WebGL-0x32fc00ac7c00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)
+[0806/114354.950:ERROR:gpu\command_buffer\service\gl_utils.cc:430] [.WebGL-0x10cc001d5600]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels
+[0806/114354.950:ERROR:gpu\command_buffer\service\gl_utils.cc:430] [.WebGL-0x1e8400b15e00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels
+[0806/114355.108:ERROR:gpu\command_buffer\service\gl_utils.cc:430] [.WebGL-0x1e8400b15e00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels
+[0806/114355.111:ERROR:gpu\command_buffer\service\gl_utils.cc:430] [.WebGL-0x10cc001d5600]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels
+[0806/114355.139:ERROR:gpu\command_buffer\service\gl_utils.cc:430] [.WebGL-0x1e8400b15e00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels
+[0806/114355.388:ERROR:gpu\command_buffer\service\gl_utils.cc:430] [.WebGL-0x10cc001d5600]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels
+[0806/114355.416:ERROR:gpu\command_buffer\service\gl_utils.cc:430] [.WebGL-0x10cc001d5600]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)

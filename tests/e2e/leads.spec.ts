@@ -196,7 +196,8 @@ test.describe("formulario en el navegador", () => {
     );
 
     await page.goto("/#prueba-gratis");
-    await page.getByLabel("Nombre y apellido").fill("Ana Pérez");
+    await page.getByLabel("Nombre", { exact: true }).fill("Ana");
+    await page.getByLabel("Apellido", { exact: true }).fill("Pérez");
     await page.getByLabel("Empresa o financiera").fill("Financiera Ejemplo");
     await page.getByLabel("Correo").fill("ana@example.com");
     await page.getByLabel("Teléfono/WhatsApp").fill("+1 809 555 0100");
@@ -224,7 +225,8 @@ test.describe("formulario en el navegador", () => {
     });
 
     await page.goto("/#prueba-gratis");
-    await page.getByLabel("Nombre y apellido").fill("Ana Pérez");
+    await page.getByLabel("Nombre", { exact: true }).fill("Ana");
+    await page.getByLabel("Apellido", { exact: true }).fill("Pérez");
     await page.getByLabel("Empresa o financiera").fill("Financiera Ejemplo");
     await page.getByLabel("Correo").fill("ana@example.com");
     await page.getByLabel("Teléfono/WhatsApp").fill("+1 809 555 0100");
@@ -256,7 +258,8 @@ test.describe("formulario en el navegador", () => {
     );
 
     await page.goto("/#prueba-gratis");
-    await page.getByLabel("Nombre y apellido").fill("Ana Pérez");
+    await page.getByLabel("Nombre", { exact: true }).fill("Ana");
+    await page.getByLabel("Apellido", { exact: true }).fill("Pérez");
     await page.getByLabel("Empresa o financiera").fill("Financiera Ejemplo");
     await page.getByLabel("Correo").fill("ana@example.com");
     await page.getByLabel("Teléfono/WhatsApp").fill("+1 809 555 0100");
@@ -267,7 +270,8 @@ test.describe("formulario en el navegador", () => {
     await page.getByRole("button", { name: "Probar gratis" }).click();
 
     await expect(page.getByText("No pudimos enviar tu solicitud")).toBeVisible();
-    await expect(page.getByLabel("Nombre y apellido")).toHaveValue("Ana Pérez");
+    await expect(page.getByLabel("Nombre", { exact: true })).toHaveValue("Ana");
+    await expect(page.getByLabel("Apellido", { exact: true })).toHaveValue("Pérez");
     await expect(page.getByLabel("Correo")).toHaveValue("ana@example.com");
   });
 });

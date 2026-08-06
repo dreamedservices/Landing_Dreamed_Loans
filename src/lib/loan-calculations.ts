@@ -77,6 +77,14 @@ export function parseLocaleNumber(raw: string): number {
   }
 
   if (lastComma > -1) {
+    const commaParts = trimmed.split(",");
+    const lastPartDigits = commaParts.at(-1)?.replace(/[^0-9]/g, "") ?? "";
+    const usesGrouping = commaParts.length > 2 || lastPartDigits.length === 3;
+
+    if (usesGrouping) {
+      return Number(trimmed.replace(/,/g, "").replace(/[^0-9.]/g, ""));
+    }
+
     const integerPart = trimmed.slice(0, lastComma).replace(/[^0-9]/g, "");
     const decimalPart = trimmed.slice(lastComma + 1).replace(/[^0-9]/g, "");
     return Number(decimalPart ? `${integerPart}.${decimalPart}` : integerPart);
@@ -86,8 +94,30 @@ export function parseLocaleNumber(raw: string): number {
 }
 
 export function formatCurrency(amount: number): string {
-  return `RD$ ${amount.toLocaleString("es-DO", {
+  return `RD$ ${amount.toLocaleString("en-US", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })}`;
+}
+
+/**
+ * Formato editable para montos: separa miles con coma y conserva hasta dos
+ * decimales con punto. Las comas existentes siempre se consideran separadores
+ * de miles, para que borrar un dígito de `5,000` produzca `500` y no `5.00`.
+ */
+export function formatCurrencyInput(raw: string, completeDecimals = false): string {
+  const withoutGrouping = raw.replace(/,/g, "").replace(/[^0-9.]/g, "");
+  if (!withoutGrouping) return "";
+
+  const [integerPart = "", ...decimalParts] = withoutGrouping.split(".");
+  const integerDigits = integerPart.replace(/^0+(?=\d)/, "") || "0";
+  const groupedInteger = integerDigits.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  const hasDecimalSeparator = withoutGrouping.includes(".");
+  const decimals = decimalParts.join("").slice(0, 2);
+
+  if (completeDecimals) {
+    return `${groupedInteger}.${decimals.padEnd(2, "0")}`;
+  }
+
+  return hasDecimalSeparator ? `${groupedInteger}.${decimals}` : groupedInteger;
 }

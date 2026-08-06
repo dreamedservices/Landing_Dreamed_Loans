@@ -44,6 +44,11 @@ const faqs = [
     answer: "Sí, el sistema tiene roles y permisos por módulo.",
   },
   {
+    question: "¿Ofrecen una instalación separada para empresas?",
+    answer:
+      "Sí. Si tu empresa necesita una instalación independiente, contáctanos para evaluar los requisitos y preparar una propuesta acorde a tu operación.",
+  },
+  {
     question: "¿Envía recordatorios automáticos?",
     answer: "Sí, hay automatización y recordatorios por WhatsApp.",
   },
