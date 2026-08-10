@@ -7,6 +7,7 @@ import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { ConsentBanner } from "@/components/analytics/ConsentBanner";
 import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
+import { MetaPixel } from "@/components/analytics/MetaPixel";
 
 const bricolageGrotesque = Bricolage_Grotesque({
   variable: "--font-bricolage",
@@ -45,6 +46,7 @@ export default function RootLayout({
         <SiteFooter loginUrl={publicEnv.NEXT_PUBLIC_SYSTEM_LOGIN_URL} />
         <ConsentBanner />
         <GoogleAnalytics />
+        <MetaPixel />
       </body>
     </html>
   );

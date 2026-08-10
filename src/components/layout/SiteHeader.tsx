@@ -19,7 +19,7 @@ export function SiteHeader({ loginUrl }: SiteHeaderProps) {
     <header className="sticky top-0 z-30 h-16 border-b border-line-dark bg-brand-ink/95 backdrop-blur">
       <div className="mx-auto flex h-full max-w-[1440px] items-center justify-between px-6 sm:px-8 lg:px-12">
         <Link href="/" className="flex items-center gap-2">
-          <Image src={logoSmall} alt={site.name} height={42} className="h-10 w-35" priority />
+          <Image src={logoSmall} alt={site.name} height={42} className="h-10 w-25" priority />
           <span className="sr-only">{site.name}</span>
         </Link>
 

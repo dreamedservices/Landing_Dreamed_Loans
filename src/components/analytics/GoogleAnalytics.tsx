@@ -1,6 +1,7 @@
 "use client";
 
 import Script from "next/script";
+import { useEffect } from "react";
 import { useConsentStore } from "@/stores/consent-store";
 import { publicEnv } from "@/lib/env";
 
@@ -14,6 +15,12 @@ import { publicEnv } from "@/lib/env";
 export function GoogleAnalytics() {
   const status = useConsentStore((state) => state.status);
   const measurementId = publicEnv.NEXT_PUBLIC_GA_MEASUREMENT_ID;
+
+  useEffect(() => {
+    if (!measurementId) return;
+    const analyticsWindow = window as typeof window & Record<string, unknown>;
+    analyticsWindow[`ga-disable-${measurementId}`] = status !== "granted";
+  }, [measurementId, status]);
 
   if (!measurementId || status !== "granted") return null;
 

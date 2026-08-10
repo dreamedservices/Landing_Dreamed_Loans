@@ -8,80 +8,49 @@ export const metadata: Metadata = {
   robots: { index: false, follow: true },
 };
 
-/**
- * A diferencia de /privacidad y /terminos (placeholders puros), esta página
- * describe lo que el sitio realmente hace hoy (Google Analytics 4 detrás de
- * un banner de consentimiento) — el propio banner enlaza aquí, así que no
- * puede ser un "estamos preparando esta página". Aun así, pendiente de
- * revisión legal antes de tratarse como texto definitivo (Fase 00/06).
- */
 export default function CookiesPage() {
   return (
     <main id="contenido">
       <Section tone="light" className="py-24">
         <Container as="div" className="max-w-2xl">
-          <Heading level={1} size="h2" tone="light">
-            Política de Cookies
-          </Heading>
+          <Heading level={1} size="h2" tone="light">Política de Cookies</Heading>
+          <p className="mt-4 text-small text-brand-ink/60">Última actualización: 7 de agosto de 2026.</p>
           <p className="mt-6 text-body text-brand-ink/80">
-            Este sitio usa Google Analytics 4 para entender cómo se usa la
-            página (qué secciones se ven, qué botones se presionan) y así
-            mejorarla. Nunca lo hacemos sin tu permiso.
+            Dream Préstamos utiliza tecnologías de medición solo cuando eliges
+            “Aceptar” en el banner. Rechazarlas no impide navegar ni enviar el formulario.
           </p>
 
-          <Heading level={2} size="h3" tone="light" className="mt-10">
-            Cómo funciona el consentimiento
-          </Heading>
+          <Heading level={2} size="h3" tone="light" className="mt-10">Qué utilizamos</Heading>
           <p className="mt-4 text-body text-brand-ink/80">
-            Al entrar al sitio ves un banner con dos opciones: &ldquo;Aceptar&rdquo; o
-            &ldquo;Rechazar&rdquo;. Mientras no elijas ninguna, Google Analytics no se
-            carga — ni siquiera el script se descarga. Si rechazas, tampoco
-            se carga. Tu elección se guarda en tu navegador (
-            <code className="rounded bg-surface-soft px-1 py-0.5 text-small">
-              localStorage
-            </code>
-            , clave <code className="rounded bg-surface-soft px-1 py-0.5 text-small">ga-consent</code>) para
-            no volver a preguntarte en cada visita. Puedes cambiar tu decisión
-            cuando quieras desde &ldquo;Preferencias de cookies&rdquo; en el pie de
-            página.
+            Google Analytics 4 nos ayuda a entender el uso agregado del sitio. Meta Pixel nos
+            ayuda a medir si una campaña de Facebook o Instagram produjo una visita o una
+            solicitud válida. No enviamos a estas herramientas el mensaje del formulario, el
+            rango de cartera, el correo, el teléfono ni otra información personal o financiera.
           </p>
 
-          <Heading level={2} size="h3" tone="light" className="mt-10">
-            Qué mide Google Analytics aquí
-          </Heading>
+          <Heading level={2} size="h3" tone="light" className="mt-10">Datos y almacenamiento</Heading>
           <p className="mt-4 text-body text-brand-ink/80">
-            Páginas y secciones vistas, clics en los botones principales
-            (probar gratis, ver cómo funciona) y si el formulario de prueba
-            gratis se completó con éxito. Estos eventos nunca incluyen tu
-            nombre, correo, teléfono ni ningún otro dato que hayas escrito en
-            el formulario.
+            Estas herramientas pueden usar identificadores como <code className="rounded bg-surface-soft px-1">_ga</code>,{" "}
+            <code className="rounded bg-surface-soft px-1">_fbp</code> y <code className="rounded bg-surface-soft px-1">_fbc</code>,
+            además de la URL visitada, navegador, dirección IP y parámetros de campaña.
           </p>
 
-          <Heading level={2} size="h3" tone="light" className="mt-10">
-            Cookies estrictamente necesarias
-          </Heading>
+          <Heading level={2} size="h3" tone="light" className="mt-10">Tu elección</Heading>
           <p className="mt-4 text-body text-brand-ink/80">
-            Aparte de Analytics, el sitio guarda en tu navegador tu elección
-            de consentimiento y, si envías el formulario, información técnica
-            necesaria para procesar esa solicitud una sola vez. Ninguna de
-            estas requiere tu permiso porque son indispensables para que el
-            sitio funcione.
+            La elección se guarda en <code className="rounded bg-surface-soft px-1">localStorage</code> con
+            la clave <code className="rounded bg-surface-soft px-1">analytics-advertising-consent-v1</code>.
+            Puedes retirarla en cualquier momento desde “Preferencias de cookies” en el pie de página.
+            Al retirarla se desactiva el envío de eventos posteriores; también puedes eliminar las
+            cookies ya existentes desde la configuración de tu navegador.
           </p>
 
-          <Heading level={2} size="h3" tone="light" className="mt-10">
-            Más información
-          </Heading>
+          <Heading level={2} size="h3" tone="light" className="mt-10">Proveedores</Heading>
           <p className="mt-4 text-body text-brand-ink/80">
-            Google explica qué datos procesa y con qué fines en su{" "}
-            <a
-              href="https://policies.google.com/privacy"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline"
-            >
-              Política de Privacidad
-            </a>
-            .
+            Consulta las políticas de{" "}
+            <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="underline">Google</a>
+            {" y "}
+            <a href="https://www.facebook.com/privacy/policy/" target="_blank" rel="noopener noreferrer" className="underline">Meta</a>
+            {" "}para conocer sus prácticas y plazos de conservación.
           </p>
         </Container>
       </Section>

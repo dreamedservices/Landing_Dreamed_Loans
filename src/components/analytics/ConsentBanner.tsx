@@ -4,14 +4,7 @@ import Link from "next/link";
 import { useConsentStore } from "@/stores/consent-store";
 import { Button } from "@/components/ui/Button";
 
-/**
- * Banner de consentimiento (Fase 00): se muestra hasta que la persona decide
- * "Aceptar" o "Rechazar" — ninguna de las dos opciones carga Google
- * Analytics por sí sola; `GoogleAnalytics.tsx` solo monta el script cuando
- * `status === "granted"`. La decisión se persiste (zustand + localStorage,
- * `consent-store.ts`); no vuelve a preguntar en visitas futuras a menos que
- * se use "Preferencias de cookies" en el footer.
- */
+/** Google Analytics y Meta Pixel solo se cargan tras una aceptación expresa. */
 export function ConsentBanner() {
   const status = useConsentStore((state) => state.status);
   const grant = useConsentStore((state) => state.grant);
@@ -27,8 +20,9 @@ export function ConsentBanner() {
     >
       <div className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-4">
         <p className="max-w-2xl text-small text-brand-white/80">
-          Usamos Google Analytics para entender cómo se usa el sitio. Solo se
-          activa si lo aceptas. Más detalles en{" "}
+          Con tu permiso usamos Google Analytics y Meta Pixel para medir el
+          uso del sitio y la efectividad de nuestras campañas. Puedes aceptar
+          o rechazar sin afectar el formulario. Más detalles en{" "}
           <Link href="/cookies" className="underline hover:text-brand-white">
             nuestra política de cookies
           </Link>

@@ -12,14 +12,19 @@ const utmToken = z
   .string()
   .trim()
   .max(100)
-  .regex(/^[a-zA-Z0-9_-]+$/, "UTM inválido")
+  .regex(/^[^\u0000-\u001F\u007F]*$/, "UTM inválido")
   .optional();
 
 export const leadSchema = z.object({
   fullName: z.string().trim().min(2, "Nombre demasiado corto").max(120),
   businessName: z.string().trim().min(2, "Empresa demasiado corta").max(120),
   email: z.email("Correo inválido").trim().toLowerCase().max(254),
-  phone: z.string().trim().min(6, "Teléfono inválido").max(30),
+  phone: z
+    .string()
+    .trim()
+    .min(6, "Teléfono inválido")
+    .max(30)
+    .refine((value) => value.replace(/\D/g, "").length >= 6, "Teléfono inválido"),
   country: z.string().trim().min(2, "País inválido").max(80),
   teamSize: z.string().trim().max(40).optional().or(z.literal("")),
   portfolioRange: z.string().trim().max(40).optional().or(z.literal("")),
@@ -31,6 +36,8 @@ export const leadSchema = z.object({
       source: utmToken,
       medium: utmToken,
       campaign: utmToken,
+      content: utmToken,
+      term: utmToken,
     })
     .optional(),
   /** Honeypot: debe llegar vacío. Un bot que autocompleta todo lo llenará. */

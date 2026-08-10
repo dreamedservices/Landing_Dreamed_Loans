@@ -43,9 +43,9 @@ const iconSizeClasses: Record<ButtonSize, string> = {
 function variantClasses(variant: ButtonVariant, tone: "dark" | "light"): string {
   switch (variant) {
     case "primary":
-      // Contraste verificado: brand-ink sobre el degradado completo (mínimo 5.83:1 en el
-      // tramo azul, README.md). No requiere superficie sólida de respaldo.
-      return "bg-[image:var(--gradient-brand)] text-brand-ink hover:brightness-105 active:brightness-95";
+      // Texto blanco a pedido explícito, pese a que el tramo verde del degradado
+      // baja el contraste a 1.35:1 (bajo el mínimo documentado en README.md).
+      return "bg-[image:var(--gradient-brand)] text-brand-white hover:brightness-105 active:brightness-95";
     case "secondary":
       return tone === "dark"
         ? "bg-transparent text-brand-white border border-line-dark hover:bg-white/5"

@@ -11,12 +11,7 @@ type ConsentState = {
   reset: () => void;
 };
 
-/**
- * Decisión de Fase 00: banner de consentimiento previo a la carga de
- * Google Analytics — no solo antes de disparar eventos, sino antes de que
- * el script de gtag.js entre al DOM (ver `GoogleAnalytics.tsx`).
- * Persistido en localStorage para no volver a preguntar en cada visita.
- */
+/** Preferencia conjunta para Google Analytics y Meta Pixel. */
 export const useConsentStore = create<ConsentState>()(
   persist(
     (set) => ({
@@ -25,6 +20,8 @@ export const useConsentStore = create<ConsentState>()(
       deny: () => set({ status: "denied" }),
       reset: () => set({ status: "undecided" }),
     }),
-    { name: "ga-consent" },
+    // La clave nueva vuelve a pedir consentimiento a quienes aceptaron la
+    // versión anterior, que solo mencionaba Google Analytics.
+    { name: "analytics-advertising-consent-v1" },
   ),
 );

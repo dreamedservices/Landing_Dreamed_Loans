@@ -43,7 +43,7 @@ export function HowItWorksSection() {
                 <Card tone="light" className="h-full">
                   <span
                     aria-hidden="true"
-                    className="flex h-10 w-10 items-center justify-center rounded-full bg-[image:var(--gradient-brand)] text-body font-semibold text-brand-ink"
+                    className="flex h-10 w-10 items-center justify-center rounded-full bg-[image:var(--gradient-brand)] text-body font-semibold text-brand-white"
                   >
                     {index + 1}
                   </span>

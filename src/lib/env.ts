@@ -13,6 +13,10 @@ const publicEnvSchema = z.object({
     .string()
     .regex(/^G-[A-Z0-9]+$/, "Debe tener el formato G-XXXXXXXXXX")
     .optional(),
+  NEXT_PUBLIC_META_PIXEL_ID: z
+    .string()
+    .regex(/^\d{5,20}$/, "Debe ser un ID numérico de Meta")
+    .optional(),
   // Export estático (sin servidor): el flujo de leads envía correos desde el
   // navegador vía EmailJS en vez de una API route con SMTP.
   NEXT_PUBLIC_SYSTEM_REGISTER_URL: z.url(),
@@ -28,6 +32,7 @@ function parsePublicEnv() {
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
     NEXT_PUBLIC_SYSTEM_LOGIN_URL: process.env.NEXT_PUBLIC_SYSTEM_LOGIN_URL,
     NEXT_PUBLIC_GA_MEASUREMENT_ID: process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || undefined,
+    NEXT_PUBLIC_META_PIXEL_ID: process.env.NEXT_PUBLIC_META_PIXEL_ID || undefined,
     NEXT_PUBLIC_SYSTEM_REGISTER_URL: process.env.NEXT_PUBLIC_SYSTEM_REGISTER_URL,
     NEXT_PUBLIC_LEADS_NOTIFICATION_EMAIL: process.env.NEXT_PUBLIC_LEADS_NOTIFICATION_EMAIL,
     NEXT_PUBLIC_EMAILJS_SERVICE_ID: process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID,

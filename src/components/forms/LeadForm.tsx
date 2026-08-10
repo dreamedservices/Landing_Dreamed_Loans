@@ -11,6 +11,8 @@ import { trackEvent } from "@/lib/analytics/track";
 import { leadSchema, MIN_FILL_TIME_MS } from "@/lib/validation/lead-schema";
 import { sendLeadToOwner, sendLeadClientConfirmation, LeadEmailError } from "@/lib/email/emailjs-client";
 import { publicEnv } from "@/lib/env";
+import { readCampaignAttribution } from "@/lib/analytics/attribution";
+import { trackMetaLeadConversion } from "@/lib/analytics/meta-client";
 
 /** FRONTEND.md §3. */
 type LeadSubmissionState =
@@ -18,19 +20,6 @@ type LeadSubmissionState =
   | { status: "submitting" }
   | { status: "success"; redirectUrl: string }
   | { status: "error"; message: string };
-
-const UTM_KEYS = ["source", "medium", "campaign"] as const;
-
-function readUtm(): Record<string, string> | undefined {
-  if (typeof window === "undefined") return undefined;
-  const params = new URLSearchParams(window.location.search);
-  const utm: Record<string, string> = {};
-  for (const key of UTM_KEYS) {
-    const value = params.get(`utm_${key}`);
-    if (value) utm[key] = value.slice(0, 100);
-  }
-  return Object.keys(utm).length > 0 ? utm : undefined;
-}
 
 /**
  * Envía vía EmailJS desde el navegador (sin servidor, export estático). Sin datos controlados por campo:
@@ -56,6 +45,7 @@ export function LeadForm() {
 
     const form = event.currentTarget;
     const data = new FormData(form);
+    const attribution = readCampaignAttribution();
     const firstName = String(data.get("nombre") ?? "").trim();
     const lastName = String(data.get("apellido") ?? "").trim();
 
@@ -70,7 +60,7 @@ export function LeadForm() {
       message: String(data.get("mensaje") ?? ""),
       processingConsent: data.get("consentimiento") === "on",
       marketingConsent: data.get("consentimiento_comercial") === "on",
-      utm: readUtm(),
+      utm: attribution.utm,
       website: String(data.get("website") ?? ""),
       startedAt,
     };
@@ -134,6 +124,7 @@ export function LeadForm() {
 
     const redirectUrl = publicEnv.NEXT_PUBLIC_SYSTEM_REGISTER_URL;
     trackEvent("lead_email_confirmed");
+    trackMetaLeadConversion();
     setState({ status: "success", redirectUrl });
     trackEvent("registration_redirect");
     window.location.href = redirectUrl;
