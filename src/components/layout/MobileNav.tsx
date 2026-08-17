@@ -72,7 +72,7 @@ export function MobileNav({ loginUrl }: MobileNavProps) {
                   </a>
                 </li>
               ))}
-            </ul>
+            </ul> 
           </nav>
 
           <div className="mt-auto flex flex-col gap-3">

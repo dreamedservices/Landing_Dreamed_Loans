@@ -8,6 +8,7 @@ import { CollectionSection } from "@/components/sections/CollectionSection";
 import { FinanceControlSection } from "@/components/sections/FinanceControlSection";
 import { TeamAutomationSection } from "@/components/sections/TeamAutomationSection";
 import { HowItWorksSection } from "@/components/sections/HowItWorksSection";
+import { PricingSection } from "@/components/sections/PricingSection";
 import { TrustSection } from "@/components/sections/TrustSection";
 import { FaqSection } from "@/components/sections/FaqSection";
 import { TrialSection } from "@/components/sections/TrialSection";
@@ -18,9 +19,7 @@ export default function Home() {
   return (
     <main id="contenido">
       <HeroSection />
-      <SectionReveal sectionName="capturas_sistema">
-        <SystemScreenshotsSection />
-      </SectionReveal>
+      <SystemScreenshotsSection />
       <SectionReveal sectionName="problema">
         <ProblemSection />
       </SectionReveal>
@@ -47,6 +46,9 @@ export default function Home() {
       </SectionReveal>
       <SectionReveal sectionName="como_funciona">
         <HowItWorksSection />
+      </SectionReveal>
+      <SectionReveal sectionName="planes">
+        <PricingSection />
       </SectionReveal>
       <SectionReveal sectionName="confianza">
         <TrustSection />

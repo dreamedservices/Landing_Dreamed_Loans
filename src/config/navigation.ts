@@ -8,7 +8,10 @@ export const navItems: NavItem[] = [
   { label: "Producto", href: "#producto" },
   { label: "Funciones", href: "#funciones" },
   { label: "Cómo funciona", href: "#como-funciona" },
+  { label: "Planes", href: "#planes" },
   { label: "Preguntas", href: "#preguntas" },
 ];
+
+export const pricingAnchor = "#planes";
 
 export const trialAnchor = "#prueba-gratis";

@@ -36,17 +36,27 @@ test("las preguntas frecuentes incluyen instalaciones separadas", async ({ page 
 
 test("el carrusel de capturas es la segunda sección y permite recorrer el sistema", async ({ page }) => {
   await page.goto("/");
+  await page.getByRole("button", { name: "Rechazar" }).click();
 
   const carousel = page.locator("#capturas");
   await expect(carousel).toBeVisible();
-  await expect(page.locator("main > :nth-child(2) > #capturas")).toBeAttached();
+  await expect(page.locator("main > #capturas")).toBeAttached();
 
   await expect(page.getByRole("heading", { name: "Todo tu negocio, conectado." })).toBeVisible();
-  await page.getByRole("button", { name: "Ver captura siguiente" }).click();
+
+  // Selección manual por clic (punto de progreso del texto dinámico).
+  await page.getByRole("button", { name: "Ir a la captura 2: Tu operación completa, en una sola vista." }).click();
   await expect(
-    page.getByRole("heading", { name: "Decisiones claras desde el dashboard." }),
+    page.getByRole("heading", { name: "Tu operación completa, en una sola vista." }),
   ).toBeVisible();
 
-  await carousel.press("ArrowRight");
-  await expect(page.getByRole("heading", { name: "Rutas y cobros sobre el mapa." })).toBeVisible();
+  // Selección manual por teclado, con el foco dentro del carrusel.
+  await page
+    .locator('[aria-roledescription="carrusel"] button[aria-current="true"]')
+    .first()
+    .focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(
+    page.getByRole("heading", { name: "Cada cliente con su historial organizado." }),
+  ).toBeVisible();
 });

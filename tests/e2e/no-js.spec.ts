@@ -20,7 +20,7 @@ test("la propuesta de valor se entiende sin JavaScript", async ({ page }) => {
   // aunque estén colapsados, sin depender de un acordeón por JavaScript.
   const faqSection = page.locator("#preguntas");
   await expect(faqSection.getByText("¿Cuánto dura la prueba gratis?")).toBeAttached();
-  await expect(faqSection.getByText("14 días.", { exact: true })).toBeAttached();
+  await expect(faqSection.getByText("15 días.", { exact: false })).toBeAttached();
 
   // El formulario de prueba gratis está presente y es enviable sin JS.
   await expect(page.getByLabel("Correo")).toBeAttached();

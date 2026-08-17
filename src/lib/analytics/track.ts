@@ -13,6 +13,7 @@ export type AnalyticsEvent =
   | "lead_email_confirmed"
   | "registration_redirect"
   | "section_view"
+  | "system_screenshot_select"
   | "three_experience_loaded"
   | "three_fallback_used";
 

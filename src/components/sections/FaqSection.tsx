@@ -3,11 +3,12 @@ import { Container } from "@/components/ui/Container";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { Heading } from "@/components/ui/Heading";
 import { TextReveal } from "@/components/motion/TextReveal";
+import { site } from "@/config/site";
 
 /**
  * Borrador de Fase 00, pendiente de aprobación literal. Excluye a propósito
- * las preguntas sobre precio post-prueba y detalle de privacidad: dependen
- * de decisiones comerciales/legales que todavía no están cerradas.
+ * el detalle de privacidad: depende de decisiones legales que todavía no
+ * están cerradas.
  */
 const faqs = [
   {
@@ -54,7 +55,12 @@ const faqs = [
   },
   {
     question: "¿Cuánto dura la prueba gratis?",
-    answer: "14 días.",
+    answer: `${site.trialDays} días. Toda cuenta nueva la inicia automáticamente, sin tarjeta ni pago por adelantado.`,
+  },
+  {
+    question: "¿Cuándo tengo que pagar?",
+    answer:
+      "Recién al terminar los días de prueba. Eliges tu plan y activas el pago directamente dentro del sistema, con tu cuenta ya configurada.",
   },
   {
     question: "¿Dónde puedo pedir ayuda?",

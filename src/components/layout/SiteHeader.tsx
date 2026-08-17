@@ -1,8 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import logoSmall from "@/assets/brand/logoLether.png";
-import { navItems, trialAnchor } from "@/config/navigation";
+import { navItems, pricingAnchor, trialAnchor } from "@/config/navigation";
 import { site } from "@/config/site";
+import { Button } from "@/components/ui/Button";
 import { TrackedCtaButton } from "@/components/analytics/TrackedCtaButton";
 import { MobileNav } from "./MobileNav";
 
@@ -47,6 +48,9 @@ export function SiteHeader({ loginUrl }: SiteHeaderProps) {
               Iniciar sesión
             </a>
           ) : null}
+          <Button href={pricingAnchor} variant="secondary" size="sm" tone="dark">
+            Ver planes
+          </Button>
           <TrackedCtaButton event="cta_trial_click" href={trialAnchor} variant="primary" size="sm">
             Probar gratis
           </TrackedCtaButton>
