@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Menu, X } from "lucide-react";
 import { navItems, trialAnchor } from "@/config/navigation";
 import { Button } from "@/components/ui/Button";
@@ -54,50 +55,57 @@ export function MobileNav({ loginUrl }: MobileNavProps) {
         {open ? <X size={20} aria-hidden="true" /> : <Menu size={20} aria-hidden="true" />}
       </button>
 
-      {open ? (
-        <div
-          id="menu-movil"
-          className="fixed inset-0 top-16 z-40 flex flex-col gap-6 bg-brand-ink px-6 py-8"
-        >
-          <nav aria-label="Navegación principal">
-            <ul className="flex flex-col gap-5">
-              {navItems.map((item) => (
-                <li key={item.href}>
+      {open && typeof document !== "undefined"
+        ? createPortal(
+            // Portal a document.body: el header tiene backdrop-blur, y
+            // backdrop-filter crea un "containing block" para descendientes
+            // fixed (igual que transform/filter) — el panel quedaba
+            // aplastado a la altura del header en vez de cubrir la pantalla.
+            <div
+              id="menu-movil"
+              className="fixed inset-0 top-16 z-50 flex flex-col gap-6 overflow-y-auto bg-brand-ink px-6 py-8"
+            >
+              <nav aria-label="Navegación principal">
+                <ul className="flex flex-col gap-5">
+                  {navItems.map((item) => (
+                    <li key={item.href}>
+                      <a
+                        href={item.href}
+                        className="text-h3 font-display text-brand-white"
+                        onClick={() => setOpen(false)}
+                      >
+                        {item.label}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+
+              <div className="mt-auto flex flex-col gap-3">
+                {loginUrl ? (
                   <a
-                    href={item.href}
-                    className="text-h3 font-display text-brand-white"
+                    href={loginUrl}
+                    className="text-body font-medium text-brand-white"
                     onClick={() => setOpen(false)}
                   >
-                    {item.label}
+                    Iniciar sesión
                   </a>
-                </li>
-              ))}
-            </ul> 
-          </nav>
-
-          <div className="mt-auto flex flex-col gap-3">
-            {loginUrl ? (
-              <a
-                href={loginUrl}
-                className="text-body font-medium text-brand-white"
-                onClick={() => setOpen(false)}
-              >
-                Iniciar sesión
-              </a>
-            ) : null}
-            <Button
-              href={trialAnchor}
-              variant="primary"
-              onClick={() => {
-                trackEvent("cta_trial_click");
-                setOpen(false);
-              }}
-            >
-              Probar gratis
-            </Button>
-          </div>
-        </div>
-      ) : null}
+                ) : null}
+                <Button
+                  href={trialAnchor}
+                  variant="primary"
+                  onClick={() => {
+                    trackEvent("cta_trial_click");
+                    setOpen(false);
+                  }}
+                >
+                  Probar gratis
+                </Button>
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
     </div>
   );
 }

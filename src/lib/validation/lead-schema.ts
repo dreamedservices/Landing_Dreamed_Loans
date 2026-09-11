@@ -3,8 +3,8 @@ import { z } from "zod";
 /**
  * Contrato de STACK-TECNOLOGICO.md §7 / FASE-05, con los campos aprobados en
  * Fase 00 (ARQUITECTURA.md §9, "usar la propuesta completa"): nombre,
- * empresa, correo y teléfono obligatorios; país obligatorio; equipo, cartera
- * y mensaje opcionales. `website` es el honeypot; `startedAt` sostiene el
+ * empresa, correo, teléfono, país, equipo y cartera obligatorios; mensaje
+ * opcional. `website` es el honeypot; `startedAt` sostiene el
  * chequeo de tiempo mínimo de llenado. Ninguno de los dos es visible al usuario.
  */
 
@@ -26,8 +26,11 @@ export const leadSchema = z.object({
     .max(30)
     .refine((value) => value.replace(/\D/g, "").length >= 6, "Teléfono inválido"),
   country: z.string().trim().min(2, "País inválido").max(80),
-  teamSize: z.string().trim().max(40).optional().or(z.literal("")),
-  portfolioRange: z.string().trim().max(40).optional().or(z.literal("")),
+  teamSize: z.string().trim().min(1, "Tamaño de equipo requerido").max(40),
+  portfolioRange: z.string().trim().min(1, "Rango de cartera requerido").max(40),
+  // Ayuda a filtrar solicitudes de personas buscando un préstamo personal.
+  rnc: z.string().trim().max(30).optional().or(z.literal("")),
+  activeLoans: z.string().trim().min(1, "Selecciona un rango").max(40),
   message: z.string().trim().max(1000).optional().or(z.literal("")),
   processingConsent: z.literal(true, { message: "Consentimiento requerido" }),
   marketingConsent: z.boolean(),

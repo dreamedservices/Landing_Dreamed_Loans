@@ -7,11 +7,9 @@ import { systemScreenshots } from "@/config/systemScreenshots";
  * interacción (GSAP, ScrollTrigger, selección, teclado) vive en la isla
  * cliente `SystemScreenshotsCarousel` (ARQUITECTURA.md §3).
  *
- * Sin `SectionReveal` aquí a propósito: su animación de salida aplica
- * `scale`/`y` continuos (scrub) a un div que envolvería a esta sección. Ese
- * transform en un ancestro rompe el pin de ScrollTrigger — `position: fixed`
- * pasa a calcularse respecto al ancestro transformado en vez del viewport,
- * lo que provoca saltos y una rueda mal posicionada. El resto de secciones
+ * Sin `SectionReveal` aquí: el carrusel ya no fija (pin) ni secuestra el
+ * scroll de la página (ver `SystemScreenshotsCarousel`), pero mantiene su
+ * propia vista a pantalla completa mientras gira. El resto de secciones
  * conserva `SectionReveal` sin cambios; el seguimiento `section_view` para
  * esta sección se reimplementa dentro del propio carrusel.
  */

@@ -42,7 +42,7 @@ export default function PrivacidadPage() {
 
           <Heading level={2} size="h3" tone="light" className="mt-10">Proveedores y transferencias</Heading>
           <p className="mt-4 text-body text-brand-ink/80">
-            EmailJS y el proveedor de correo procesan el envío de la solicitud. Google Analytics
+            Nuestro proveedor de correo (SMTP propio) procesa el envío de la solicitud. Google Analytics
             y Meta procesan medición solo después de aceptar las tecnologías opcionales. Estos
             proveedores pueden procesar información fuera de tu país bajo sus propios mecanismos
             contractuales y políticas de privacidad.

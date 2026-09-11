@@ -12,15 +12,17 @@ export function TrialSection() {
     <Section id="prueba-gratis" tone="deep">
       <Container as="div" className="grid gap-12 lg:grid-cols-[0.8fr_1.2fr]">
         <div>
-          <Eyebrow tone="dark">Prueba gratis</Eyebrow>
+          <Eyebrow tone="dark">Exclusivo para financieras y prestamistas</Eyebrow>
           <TextReveal>
             <Heading level={2} tone="dark" className="mt-2">
               Empieza tu prueba gratis de {site.trialDays} días.
             </Heading>
           </TextReveal>
           <p className="mt-4 max-w-prose text-lead text-brand-white/80">
-            Completa la solicitud y te llevamos al registro de Dream
-            Préstamos.
+            Dream Préstamos es un sistema de gestión pensado para{" "}
+            <strong className="text-brand-white">financieras, prestamistas y cooperativas</strong>{" "}
+            que ya operan préstamos. Completa la solicitud y te llevamos al
+            registro de Dream Préstamos.
           </p>
         </div>
 

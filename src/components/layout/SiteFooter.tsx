@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import logoFull from "@/assets/brand/logo-full.png";
+import logoFull from "@/assets/brand/logo-small.png";
 import { navItems, trialAnchor } from "@/config/navigation";
 import { site } from "@/config/site";
 import { TrackedLink } from "@/components/analytics/TrackedLink";
@@ -20,12 +20,12 @@ const dreamedServices = {
   social: [
     {
       label: "Facebook",
-      href: "https://www.facebook.com/dreamedservices?mibextid=ZbWKwL",
+      href: "https://www.facebook.com/share/17q5AhwMfn/?mibextid=wwXIfr",
       icon: FacebookIcon,
     },
     {
       label: "Instagram",
-      href: "https://instagram.com/dreamedservices?igsh=MXFjbnRxdTQ1NGtyag==",
+      href: "https://www.instagram.com/dreamprestamos?utm_source=ig_web_button_share_sheet&igsi=ZDNlZDc0MzIxNw==",
       icon: InstagramIcon,
     },
     {

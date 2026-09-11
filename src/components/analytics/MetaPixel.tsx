@@ -15,29 +15,39 @@ export function MetaPixel() {
   const pixelId = publicEnv.NEXT_PUBLIC_META_PIXEL_ID;
   const pathname = usePathname();
   const lastTrackedPath = useRef<string | null>(null);
+  // El script base (con el fbq('init', ...)) corre de forma asíncrona; sin este
+  // guard, un efecto en el primer render con consentimiento ya otorgado podía
+  // disparar "track"/"consent" antes de que el init real hubiera ejecutado.
+  const isPixelReadyRef = useRef(false);
 
-  const grantAndTrackPage = useCallback(() => {
-    if (!window.fbq) return;
-    window.fbq("consent", "grant");
+  const trackPageView = useCallback(() => {
+    if (!isPixelReadyRef.current || !window.fbq) return;
     if (lastTrackedPath.current === pathname) return;
     window.fbq("track", "PageView");
     lastTrackedPath.current = pathname;
   }, [pathname]);
 
+  const handleScriptReady = useCallback(() => {
+    isPixelReadyRef.current = true;
+    window.fbq?.("consent", "grant");
+    trackPageView();
+  }, [trackPageView]);
+
   useEffect(() => {
-    if (!pixelId || !window.fbq) return;
+    if (!pixelId || !isPixelReadyRef.current) return;
     if (status === "granted") {
-      grantAndTrackPage();
+      window.fbq?.("consent", "grant");
+      trackPageView();
       return;
     }
-    window.fbq("consent", "revoke");
+    window.fbq?.("consent", "revoke");
     lastTrackedPath.current = null;
-  }, [grantAndTrackPage, pixelId, status]);
+  }, [pixelId, status, trackPageView]);
 
   if (!pixelId || status !== "granted") return null;
 
   return (
-    <Script id="meta-pixel" strategy="afterInteractive" onReady={grantAndTrackPage}>
+    <Script id="meta-pixel" strategy="afterInteractive" onReady={handleScriptReady}>
       {`
         !function(f,b,e,v,n,t,s){
           if(!f.fbq){n=f.fbq=function(){n.callMethod?

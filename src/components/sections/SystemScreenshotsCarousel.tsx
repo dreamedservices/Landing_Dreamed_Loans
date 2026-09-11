@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
 import Image from "next/image";
+import { Maximize2, X } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { Heading } from "@/components/ui/Heading";
@@ -21,30 +22,37 @@ const ANGLE_STEP = 21;
 const FOCUS_ANGLE = 0;
 /** Más allá de esta distancia angular al foco, una captura se desvanece del todo. */
 const FADE_ANGLE = 98;
-/** Fracción de alto de viewport que recorre el scroll por cada transición entre capturas. */
-const SCROLL_HEIGHT_PER_STEP = 0.85;
+/** Media query que decide si el arco (giro) está activo, en vez del flujo móvil con scroll-snap. */
+const ARC_MEDIA_QUERY = "(min-width: 768px) and (prefers-reduced-motion: no-preference)";
 
 function isReducedMotion() {
   return typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
+function isArcMode() {
+  return typeof window !== "undefined" && window.matchMedia(ARC_MEDIA_QUERY).matches;
+}
+
 /**
- * Isla cliente: refs de DOM, GSAP/ScrollTrigger, estado de selección, clic,
- * teclado, texto dinámico, responsive y limpieza (ARQUITECTURA.md §3 y §7).
- * `SystemScreenshotsSection` (Server Component) solo compone el encabezado
- * y delega aquí toda la interacción.
+ * Isla cliente: refs de DOM, GSAP, estado de selección, clic, teclado, rueda
+ * local del carrusel, texto dinámico, vista ampliada, responsive y limpieza
+ * (ARQUITECTURA.md §3 y §7). `SystemScreenshotsSection` (Server Component)
+ * solo compone el encabezado y delega aquí toda la interacción.
  */
 export function SystemScreenshotsCarousel({ items }: SystemScreenshotsCarouselProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const activeIndexRef = useRef(0);
+  const [zoomIndex, setZoomIndex] = useState<number | null>(null);
 
   const rootRef = useRef<HTMLDivElement>(null);
+  const arcRegionRef = useRef<HTMLDivElement>(null);
   const flowTrackRef = useRef<HTMLDivElement>(null);
   const textRef = useRef<HTMLDivElement>(null);
+  const zoomPanelRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const spokeRefs = useRef<Array<HTMLDivElement | null>>([]);
   const flowButtonRefs = useRef<Array<HTMLButtonElement | null>>([]);
-  const scrollTriggerRef = useRef<InstanceType<typeof ScrollTrigger> | null>(null);
+  const arcProxyRef = useRef({ t: 0 });
 
   const active = items[activeIndex];
 
@@ -90,7 +98,28 @@ export function SystemScreenshotsCarousel({ items }: SystemScreenshotsCarouselPr
     [items],
   );
 
-  /** Única fuente de verdad para la selección manual (clic o teclado). */
+  /** Anima el arco desde su progreso actual hasta `index` (clic, teclado o rueda sobre el carrusel). */
+  const animateArcTo = useCallback(
+    (index: number) => {
+      gsap.killTweensOf(arcProxyRef.current);
+
+      if (isReducedMotion()) {
+        arcProxyRef.current.t = index;
+        applyArc(index);
+        return;
+      }
+
+      gsap.to(arcProxyRef.current, {
+        t: index,
+        duration: 0.6,
+        ease: "power2.out",
+        onUpdate: () => applyArc(arcProxyRef.current.t),
+      });
+    },
+    [applyArc],
+  );
+
+  /** Única fuente de verdad para la selección manual (clic, teclado o rueda). */
   const goTo = useCallback(
     (index: number) => {
       const clamped = Math.max(0, Math.min(items.length - 1, index));
@@ -101,10 +130,8 @@ export function SystemScreenshotsCarousel({ items }: SystemScreenshotsCarouselPr
       }
       trackEvent("system_screenshot_select", { screenshot: items[clamped].id });
 
-      const st = scrollTriggerRef.current;
-      if (st) {
-        const target = st.start + (clamped / (items.length - 1)) * (st.end - st.start);
-        window.scrollTo({ top: target, behavior: "smooth" });
+      if (isArcMode()) {
+        animateArcTo(clamped);
         return;
       }
 
@@ -114,7 +141,7 @@ export function SystemScreenshotsCarousel({ items }: SystemScreenshotsCarouselPr
         block: "nearest",
       });
     },
-    [items],
+    [items, animateArcTo],
   );
 
   function handleArrowKeys(event: KeyboardEvent<HTMLDivElement>, focusTargets: Array<HTMLButtonElement | null>) {
@@ -126,8 +153,20 @@ export function SystemScreenshotsCarousel({ items }: SystemScreenshotsCarouselPr
     focusTargets[next]?.focus();
   }
 
-  // Rueda de escritorio/tablet: pin + scrub. Móvil o "reducir movimiento":
-  // ninguna rama se ejecuta (la arc queda oculta por CSS) y no se crea pin.
+  function handleCardClick(index: number) {
+    if (activeIndexRef.current === index) {
+      setZoomIndex(index);
+      trackEvent("system_screenshot_zoom", { screenshot: items[index].id });
+      return;
+    }
+    goTo(index);
+  }
+
+  // Arco de escritorio/tablet: posición inicial de las capturas y registro
+  // del seguimiento de vista de sección. Ya no fija (pin) ni secuestra el
+  // scroll de la página: el scroll normal siempre mueve la página, y la
+  // rotación del arco se controla aparte (ver el listener de rueda sobre el
+  // carrusel, más abajo, y los manejadores de clic/teclado).
   useGSAP(
     () => {
       ScrollTrigger.create({
@@ -139,41 +178,58 @@ export function SystemScreenshotsCarousel({ items }: SystemScreenshotsCarouselPr
 
       const mm = gsap.matchMedia();
 
-      mm.add({ isArc: "(min-width: 768px) and (prefers-reduced-motion: no-preference)" }, (context) => {
+      mm.add({ isArc: ARC_MEDIA_QUERY }, (context) => {
         const { isArc } = context.conditions as { isArc: boolean };
         if (!isArc) return;
 
-        applyArc(0);
-
-        const proxy = { t: 0 };
-        const tween = gsap.to(proxy, {
-          t: items.length - 1,
-          ease: "none",
-          onUpdate: () => applyArc(proxy.t),
-          scrollTrigger: {
-            trigger: rootRef.current,
-            start: "top top",
-            end: () => `+=${(items.length - 1) * window.innerHeight * SCROLL_HEIGHT_PER_STEP}`,
-            pin: true,
-            scrub: 0.6,
-            invalidateOnRefresh: true,
-          },
-        });
-
-        scrollTriggerRef.current = tween.scrollTrigger ?? null;
-        requestAnimationFrame(() => ScrollTrigger.refresh());
-
-        return () => {
-          scrollTriggerRef.current = null;
-        };
+        arcProxyRef.current.t = activeIndexRef.current;
+        applyArc(activeIndexRef.current);
       });
 
       return () => mm.revert();
     },
-    { scope: rootRef, dependencies: [applyArc, items.length] },
+    { scope: rootRef, dependencies: [applyArc] },
   );
 
-  // Texto inferior izquierdo: crossfade rápido cada vez que cambia la selección.
+  // Rueda sobre el carrusel: mueve la selección en vez de la página. En los
+  // extremos (primera/última captura) deja de interceptar el evento para
+  // que el scroll de la página continúe con normalidad hacia la sección
+  // vecina. Se usa un listener nativo (no `onWheel` de React) porque solo
+  // así `preventDefault` funciona de forma fiable en un evento de rueda.
+  useEffect(() => {
+    const el = arcRegionRef.current;
+    if (!el) return;
+
+    let locked = false;
+    let unlockTimeout: number | undefined;
+
+    const onWheel = (event: WheelEvent) => {
+      if (isReducedMotion() || !isArcMode()) return;
+      if (Math.abs(event.deltaY) < 4) return;
+
+      const dir = event.deltaY > 0 ? 1 : -1;
+      const next = activeIndexRef.current + dir;
+      if (next < 0 || next > items.length - 1) return;
+
+      event.preventDefault();
+      if (locked) return;
+
+      locked = true;
+      goTo(next);
+      unlockTimeout = window.setTimeout(() => {
+        locked = false;
+      }, 550);
+    };
+
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => {
+      el.removeEventListener("wheel", onWheel);
+      window.clearTimeout(unlockTimeout);
+    };
+  }, [goTo, items.length]);
+
+  // Texto dinámico (eyebrow + título grande + descripción): crossfade rápido
+  // cada vez que cambia la selección.
   useGSAP(
     () => {
       if (!textRef.current) return;
@@ -191,6 +247,43 @@ export function SystemScreenshotsCarousel({ items }: SystemScreenshotsCarouselPr
     },
     { scope: rootRef, dependencies: [activeIndex] },
   );
+
+  // Vista ampliada: entra con una animación de escala y bloquea el scroll de
+  // fondo mientras está abierta; Escape o clic fuera la cierran.
+  useGSAP(
+    () => {
+      if (zoomIndex === null || !zoomPanelRef.current) return;
+
+      if (isReducedMotion()) {
+        gsap.set(zoomPanelRef.current, { autoAlpha: 1, scale: 1 });
+        return;
+      }
+
+      gsap.fromTo(
+        zoomPanelRef.current,
+        { autoAlpha: 0, scale: 0.85 },
+        { autoAlpha: 1, scale: 1, duration: 0.35, ease: "power3.out" },
+      );
+    },
+    { dependencies: [zoomIndex] },
+  );
+
+  useEffect(() => {
+    if (zoomIndex === null) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const onKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (event.key === "Escape") setZoomIndex(null);
+    };
+    window.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [zoomIndex]);
 
   // Móvil / "reducir movimiento": carrusel deslizable nativo con scroll-snap.
   // Un IntersectionObserver detecta qué captura queda centrada y sincroniza
@@ -221,6 +314,8 @@ export function SystemScreenshotsCarousel({ items }: SystemScreenshotsCarouselPr
     return () => observer.disconnect();
   }, [items.length]);
 
+  const zoomItem = zoomIndex !== null ? items[zoomIndex] : null;
+
   return (
     <div
       ref={rootRef}
@@ -233,9 +328,12 @@ export function SystemScreenshotsCarousel({ items }: SystemScreenshotsCarouselPr
         + `right-0`): así ninguna captura puede invadir geométricamente la
         columna izquierda donde viven el encabezado y el texto dinámico, sin
         depender de que la trigonometría del ángulo caiga siempre del lado
-        correcto — el límite del lienzo lo garantiza.
+        correcto — el límite del lienzo lo garantiza. `arcRegionRef` es el
+        alcance del listener de rueda: solo aquí la rueda mueve el carrusel en
+        vez de la página.
       */}
       <div
+        ref={arcRegionRef}
         className="absolute inset-y-0 right-0 z-10 hidden w-[66%] overflow-hidden md:motion-safe:block lg:w-[68%]"
         style={{ "--wheel-radius": "clamp(360px,38vw,760px)" } as CSSProperties}
         role="region"
@@ -278,9 +376,13 @@ export function SystemScreenshotsCarousel({ items }: SystemScreenshotsCarouselPr
               ref={(el) => {
                 cardRefs.current[index] = el;
               }}
-              onClick={() => goTo(index)}
+              onClick={() => handleCardClick(index)}
               aria-current={activeIndex === index ? "true" : undefined}
-              aria-label={`Mostrar captura ${index + 1} de ${items.length}: ${item.title}`}
+              aria-label={
+                activeIndex === index
+                  ? `Ampliar captura ${index + 1} de ${items.length}: ${item.title}`
+                  : `Mostrar captura ${index + 1} de ${items.length}: ${item.title}`
+              }
               className={cn(
                 "group absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl border border-line-light bg-brand-white shadow-soft-light will-change-transform",
                 "transition-[box-shadow] duration-300 ease-out",
@@ -302,6 +404,14 @@ export function SystemScreenshotsCarousel({ items }: SystemScreenshotsCarouselPr
                 }
                 priority={index === 0}
               />
+              {activeIndex === index && (
+                <span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute bottom-2 right-2 flex h-7 w-7 items-center justify-center rounded-full bg-brand-ink/70 text-brand-white opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100"
+                >
+                  <Maximize2 className="h-3.5 w-3.5" />
+                </span>
+              )}
             </button>
           </div>
         ))}
@@ -323,17 +433,18 @@ export function SystemScreenshotsCarousel({ items }: SystemScreenshotsCarouselPr
         sigue anclado a `rootRef` vía `inset-y-0`: si en su lugar hiciéramos
         `Container` `relative`, el bloque colapsaría a alto 0 (Container no
         tiene alto propio) y el título quedaría centrado fuera de pantalla.
+        Esta caja, al medir `w-full max-w-[1440px]`, se extiende también por
+        encima del arco aunque ahí no tenga contenido visible; con `z-20` por
+        delante del arco (`z-10`) y sin `pointer-events-none`, bloqueaba
+        clics, hover y rueda sobre las tarjetas. Por eso lleva
+        `pointer-events-none` y cada hijo con contenido real recupera
+        `pointer-events-auto`.
       */}
       <Container as="div">
-        <div className="md:motion-safe:absolute md:motion-safe:inset-y-0 md:motion-safe:left-1/2 md:motion-safe:z-20 md:motion-safe:flex md:motion-safe:w-full md:motion-safe:max-w-[1440px] md:motion-safe:-translate-x-1/2 md:motion-safe:flex-col md:motion-safe:justify-center md:motion-safe:gap-10 md:motion-safe:px-8 lg:motion-safe:px-12">
-          <div>
-            <div className="flex flex-wrap items-center gap-3">
-              <Eyebrow tone="light">El sistema por dentro</Eyebrow>
-              <Badge tone="info">Capturas reales</Badge>
-            </div>
-            <Heading level={2} tone="light" className="mt-3 max-w-2xl">
-              Mira Dream Préstamos en acción.
-            </Heading>
+        <div className="md:motion-safe:pointer-events-none md:motion-safe:absolute md:motion-safe:inset-y-0 md:motion-safe:left-1/2 md:motion-safe:z-20 md:motion-safe:flex md:motion-safe:w-full md:motion-safe:max-w-[1440px] md:motion-safe:-translate-x-1/2 md:motion-safe:flex-col md:motion-safe:justify-center md:motion-safe:gap-10 md:motion-safe:px-8 lg:motion-safe:px-12">
+          <div className="flex flex-wrap items-center gap-3 md:motion-safe:pointer-events-auto">
+            <Eyebrow tone="light">El sistema por dentro</Eyebrow>
+            <Badge tone="info">Capturas reales</Badge>
           </div>
 
           {/* Móvil o "reducir movimiento": carrusel horizontal con scroll-snap, sin pin ni rotación. */}
@@ -354,9 +465,13 @@ export function SystemScreenshotsCarousel({ items }: SystemScreenshotsCarouselPr
                 }}
                 data-flow-item
                 data-flow-index={index}
-                onClick={() => goTo(index)}
+                onClick={() => handleCardClick(index)}
                 aria-current={activeIndex === index ? "true" : undefined}
-                aria-label={`Mostrar captura ${index + 1} de ${items.length}: ${item.title}`}
+                aria-label={
+                  activeIndex === index
+                    ? `Ampliar captura ${index + 1} de ${items.length}: ${item.title}`
+                    : `Mostrar captura ${index + 1} de ${items.length}: ${item.title}`
+                }
                 className="relative h-72 w-[82%] shrink-0 snap-center overflow-hidden rounded-2xl border border-line-light bg-brand-white shadow-soft-light focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-blue sm:h-80 sm:w-[58%]"
               >
                 <Image
@@ -371,10 +486,21 @@ export function SystemScreenshotsCarousel({ items }: SystemScreenshotsCarouselPr
             ))}
           </div>
 
-          {/* Texto dinámico + progreso: forma un solo bloque con el encabezado de arriba (ver comentario del envoltorio); en el flujo móvil, va debajo del carrusel. */}
-          <div ref={textRef} aria-live="polite" aria-atomic="true" className="mt-6 max-w-md md:motion-safe:mt-0">
+          {/*
+            Texto dinámico: el título grande (antes fijo, "Mira Dream
+            Préstamos en acción.") ahora es el título de la captura activa y
+            cambia con ella, igual que el resto del bloque. Forma un solo
+            grupo con el encabezado de arriba (ver comentario del
+            envoltorio); en el flujo móvil, va debajo del carrusel.
+          */}
+          <div
+            ref={textRef}
+            aria-live="polite"
+            aria-atomic="true"
+            className="mt-6 max-w-md md:motion-safe:mt-0 md:motion-safe:pointer-events-auto"
+          >
             <p className="text-label font-semibold uppercase tracking-[0.12em] text-brand-blue">{active.eyebrow}</p>
-            <Heading level={3} tone="light" className="mt-2">
+            <Heading level={2} tone="light" className="mt-2 max-w-2xl">
               {active.title}
             </Heading>
             <p className="mt-3 max-w-sm text-body text-brand-ink/75">{active.description}</p>
@@ -403,6 +529,47 @@ export function SystemScreenshotsCarousel({ items }: SystemScreenshotsCarouselPr
           </div>
         </div>
       </Container>
+
+      {/*
+        Vista ampliada: se renderiza como hermana del arco (no dentro de una
+        `spoke`/`card` con `rotate`/`scale` propios) para que `fixed` se
+        posicione contra el viewport y no contra un ancestro transformado.
+      */}
+      {zoomItem && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-brand-ink/80 p-6 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Captura ampliada: ${zoomItem.title}`}
+          onClick={() => setZoomIndex(null)}
+        >
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              setZoomIndex(null);
+            }}
+            className="absolute right-6 top-6 flex h-10 w-10 items-center justify-center rounded-full bg-brand-white/10 text-brand-white transition hover:bg-brand-white/20 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-blue"
+            aria-label="Cerrar vista ampliada"
+          >
+            <X aria-hidden="true" className="h-5 w-5" />
+          </button>
+
+          <div
+            ref={zoomPanelRef}
+            className="relative max-h-[85vh] w-full max-w-4xl overflow-hidden rounded-2xl bg-brand-white shadow-soft-light"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <Image
+              src={zoomItem.image}
+              alt={zoomItem.alt}
+              className="h-auto max-h-[85vh] w-full object-contain"
+              sizes="(min-width: 1024px) 60vw, 90vw"
+              priority
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

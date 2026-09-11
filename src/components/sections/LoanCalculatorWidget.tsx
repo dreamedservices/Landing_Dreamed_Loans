@@ -86,8 +86,12 @@ export function LoanCalculatorWidget() {
           required
         />
 
-        <div className="grid grid-cols-2 gap-4">
-          <div className="relative">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {/* self-start: sin esto, CSS Grid estira ambas columnas a la altura
+              de la más alta (ej. si "Interés mensual (%)" se parte en dos
+              líneas en móvil), y el ícono absolute queda posicionado contra
+              ese alto estirado en vez del propio input, saliéndose de su caja. */}
+          <div className="relative self-start">
             <Input
               id="cuotas"
               name="cuotas"
@@ -103,7 +107,7 @@ export function LoanCalculatorWidget() {
               className="absolute bottom-[11px] left-3 h-5 w-5 text-brand-ink/40"
             />
           </div>
-          <div className="relative">
+          <div className="relative self-start">
             <Input
               id="interes"
               name="interes"

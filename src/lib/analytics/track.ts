@@ -14,6 +14,7 @@ export type AnalyticsEvent =
   | "registration_redirect"
   | "section_view"
   | "system_screenshot_select"
+  | "system_screenshot_zoom"
   | "three_experience_loaded"
   | "three_fallback_used";
 
